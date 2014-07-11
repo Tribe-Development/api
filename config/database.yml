@@ -1,0 +1,9 @@
+development:
+  adapter: mysql2
+  encoding: utf8
+  database: tribe
+  username: root
+  password: bugzzues
+  host: 127.0.0.1
+  port: 3306
+  socket: /var/run/mysqld/mysqld.sock
