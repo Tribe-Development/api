@@ -24,14 +24,22 @@ end
 
 # Creates a new tribe using POST params
 post '/tribes/new' do
-	response['Access-Control-Allow-Origin'] = '0.0.0.0'
+	if !params[:name]
+		status 400
+		ret = {
+			:error_message => "Parameter 'name' is empty"
+		}
+		body ret
+		return
+	end
+
 	name = params[:name]
 	if Tribe.exists?(:name => name)
 		status 403
-		return_data = {
-			:message => "Tribe #{name} already exists"
+		ret = {
+			:error_message => "Tribe already exists"
 		}
-		body return_data.to_json
+		body ret
 		return
 	end
 	puts name
@@ -42,8 +50,7 @@ post '/tribes/new' do
 	createTribeRedis(tribe.id)
 	# return "Tribe #{tribe.name} created"
 	status 200
-	return_data = { :message => "Tribe #{name} created" }
-	body return_data.to_json
+	return
 end
 
 # Create new user using POST params
@@ -52,12 +59,26 @@ post '/users/new' do
 	password = params[:password]
 	first_name = params[:first_name]
 	last_name = params[:last_name]
+	if !params[:username] or !params[:password] or !params[:first_name] or !params[:last_name]
+		status 400
+		ret = {
+			:error_message => "Bad Request: Empty parameter(s)"
+		}
+		body ret
+		return
+	end
 	# Check that username doesn't already exist
 	if User.exists?(:username => username)
-		return 0
+		status 403
+		ret = {
+			:error_message => "User already exists"
+		}
+		body ret
+		return
 	end
 	createUser(username, password, first_name, last_name)
-	return 1
+	status 200
+	return
 end
 
 # Deletes a tribe
@@ -149,7 +170,7 @@ get '/tribes/:tribe/add/users/:user' do |tribe_id, user_id|
 end
 
 get '/tribes/:tribe/delete/users/:user' do |tribe_id, user_id|
-	if !TribeToUser.where("tribe_id = ? AND user_id = ?", tribe_id, user_id).exists?
+	if !TribeToUser.where("tribe_id = ? AND user_id = ?", tribe_id.to_s, user_id.to_s).exists?
 		#return "Relation between tribe #{tribe_id} and user #{user_id} does not exist"
 		status 
 	end
@@ -175,6 +196,15 @@ end
 post '/login' do
 	username = params[:username]
 	password = params[:password]
+	if !params[:username] or !params[:password]
+		status 400
+		return
+	end
 	output = checkLogin(username, password)
-	return output
+	if output.to_i > 0
+		status 200
+	else
+		status 403
+	end
+	return
 end
