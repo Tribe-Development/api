@@ -8,7 +8,7 @@ def createUser(username, password, first_name, last_name)
 	user.first_name = first_name
 	user.last_name = last_name
 	user.save
-	return "User #{username} created"
+	return 1
 end
 
 def createTribeSQL(name)
@@ -24,6 +24,7 @@ def deleteTribe(tribe_id)
 	relations.each do |relation|
 		relation.destroy()
 	end
+	# Delete all messages
 	tribe.destroy()
 	return "Tribe #{tribe.name} deleted"
 end
@@ -59,8 +60,4 @@ def checkLogin(username, password)
 		return "0" # 0 = Incorrect Password, but correct username
 	end
 	return "-1" # -1 = User does not exist
-end
-
-def clear_active_connections!
- 	@connection_pools.each_value {|pool| pool.release_connection }
 end

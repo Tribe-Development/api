@@ -24,12 +24,26 @@ end
 
 # Creates a new tribe using POST params
 post '/tribes/new' do
+	response['Access-Control-Allow-Origin'] = '0.0.0.0'
 	name = params[:name]
+	if Tribe.exists?(:name => name)
+		status 403
+		return_data = {
+			:message => "Tribe #{name} already exists"
+		}
+		body return_data.to_json
+		return
+	end
+	puts name
 	createTribeSQL(name)
 	tribes = Tribe.where("name = ?", name)
+	puts tribes.to_json
 	tribe = tribes[0]
 	createTribeRedis(tribe.id)
-	return "Tribe #{tribe.name} created"
+	# return "Tribe #{tribe.name} created"
+	status 200
+	return_data = { :message => "Tribe #{name} created" }
+	body return_data.to_json
 end
 
 # Create new user using POST params
@@ -40,9 +54,10 @@ post '/users/new' do
 	last_name = params[:last_name]
 	# Check that username doesn't already exist
 	if User.exists?(:username => username)
-		return "The user #{username} already exists"
+		return 0
 	end
 	createUser(username, password, first_name, last_name)
+	return 1
 end
 
 # Deletes a tribe
@@ -55,7 +70,8 @@ get '/users/:user/delete' do |user_id|
 	user = User.find(user_id.to_i)
 	# Check that user exists
 	if !User.exists?(user_id)
-		return "The user with id #{user_id.to_s} does not exist"
+		#return "The user with id #{user_id.to_s} does not exist"
+		return 0
 	end
 	user.destroy()
 
@@ -65,7 +81,8 @@ get '/users/:user/delete' do |user_id|
 		relation.destroy()
 	end
 
-	return "Deleted user #{user.username} and deleted all relations to tribes"
+	#return "Deleted user #{user.username} and deleted all relations to tribes"
+	return 1
 end
 
 # Outputs tribe_id and name
@@ -98,6 +115,7 @@ end
 
 # Gets a specific message for a tribe
 get '/tribes/:tribe/messages/:message' do |tribe_id, message_id|
+	response['Access-Control-Allow-Origin'] = 'http://54.191.143.176:4568'
 	message_obj = getMessage(tribe_id, message_id)
 	return message_obj.to_json
 end
@@ -113,25 +131,33 @@ post '/tribes/:tribe/messages/new' do |tribe_id|
 	date = params[:date]
 	# Create message in redis database
 	sendMessage(content, author_id, recipient_type, recipient_id) # PARAMS mes_content, author_id, recipient_type, recipient_id
+	return 1
 end
 
 # Add user to tribe using ids
 get '/tribes/:tribe/add/users/:user' do |tribe_id, user_id|
 	# Check that relation doesn't already exist
 	if TribeToUser.where("tribe_id = ? AND user_id = ?", tribe_id, user_id).exists?
-		return "Relation between tribe #{tribe_id} and user #{user_id} already exists"
+		#return "Relation between tribe #{tribe_id} and user #{user_id} already exists"
+		return 0
 	end
 	addUserToTribe(user_id, tribe_id)
+	error = {
+		:error_message => "User with id #{user_id} already exists"
+	}
+	return 1
 end
 
 get '/tribes/:tribe/delete/users/:user' do |tribe_id, user_id|
 	if !TribeToUser.where("tribe_id = ? AND user_id = ?", tribe_id, user_id).exists?
-		return "Relation between tribe #{tribe_id} and user #{user_id} does not exist"
+		#return "Relation between tribe #{tribe_id} and user #{user_id} does not exist"
+		status 
 	end
 	relations = TribeToUser.where("tribe_id = ? AND user_id = ?", tribe_id, user_id)
 	relation = relations[0]
 	relation.destroy()
-	"User #{user_id} removed from tribe #{tribe_id}"
+	#{}"User #{user_id} removed from tribe #{tribe_id}"
+	return 1
 end
 
 # Lists all tribes that the user is a part of
@@ -149,9 +175,6 @@ end
 post '/login' do
 	username = params[:username]
 	password = params[:password]
-	puts username
-	puts password
 	output = checkLogin(username, password)
-	puts output
 	return output
 end
