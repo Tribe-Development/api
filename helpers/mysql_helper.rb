@@ -91,6 +91,10 @@ def createSession(user_id)
 end
 
 def deleteSession(token)
+	if !Session.exists?(:token => token)
+		return 404
+	end
 	session = Session.where(:token => token).take
 	session.destroy
+	return 200
 end

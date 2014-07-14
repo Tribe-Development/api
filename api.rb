@@ -51,8 +51,7 @@ post '/logout' do
 		status 400
 		return
 	end
-	deleteSession(params[:token])
-	status 200
+	status deleteSession(params[:token])
 	return
 end
 
