@@ -19,3 +19,6 @@ end
 
 class TribeToUser < ActiveRecord::Base
 end
+
+class Session < ActiveRecord::Base
+end

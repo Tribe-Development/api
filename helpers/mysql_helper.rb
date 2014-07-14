@@ -41,9 +41,18 @@ def getUserTribes(user_id)
 	relations = TribeToUser.where(:user_id => user_id)
 	tribes = []
 	relations.each do |relation|
-		tribes.push(relation.tribe_id)
+		tribes.push(relation.user_id)
 	end
 	return tribes
+end
+
+def getTribeUsers(tribe_id)
+	relations = TribeToUser.where(:tribe_id => tribe_id)
+	users = []
+	relations.each do |relation|
+		users.push(relation.user_id)
+	end
+	return users
 end
 
 def getTribeId(tribe_name)
@@ -55,9 +64,28 @@ def checkLogin(username, password)
 		users = User.where(:username => username)
 		user = users[0]
 		if user["password"] == Digest::MD5.hexdigest(password)
-			return user.id.to_s # 1 = Correct Login
+			return user.id # 1 = Correct Login
 		end
 		return "0" # 0 = Incorrect Password, but correct username
 	end
 	return "-1" # -1 = User does not exist
+end
+
+def createSession(user_id)
+	time = Time.new
+	secret = "zxv8zq(fsiuu6-46lo9w)*#ei99hr3h%qy!zsl2v8_#7_p@*#q"
+	token = Digest::MD5.hexdigest(time.inspect + secret + user_id.to_s)
+	# Check that token does not already exist
+	if Session.exists?(:token => token)
+		createSession(user_id)
+		return	
+	end
+	# Set expiration date
+	expiration = time + 604800*2
+	session = Session.new
+	session.user_id = user_id
+	session.token = token
+	session.expires = expiration.strftime("%Y-%m-%d")
+	session.save
+	return token
 end

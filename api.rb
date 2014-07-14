@@ -4,6 +4,7 @@ require "rubygems"
 require_relative "models/models.rb"
 require_relative "helpers/redis_helper.rb"
 require_relative "helpers/mysql_helper.rb"
+require_relative "helpers/auth_helper.rb"
 require "redis"
 require "json"
 
@@ -49,6 +50,7 @@ post '/tribes/new' do
 	tribe = tribes[0]
 	createTribeRedis(tribe.id)
 	# return "Tribe #{tribe.name} created"
+	addUserToTribe()
 	status 200
 	return
 end
@@ -115,23 +117,57 @@ end
 
 # Outputs all users in a tribe
 get '/tribes/:tribe/users' do |tribe_id|
-	relations = TribeToUser.where("tribe_id = ?", tribe_id)
-	output = []
-	relations.each do |relation|
-			output.push(relation.user_id)
+	# Check if tribe exists
+	if !Tribe.exists?(:id => tribe_id)
+		status 404
+		return
 	end
+
+	# Authenticate
+	auth = isAuthorizedTribe(params[:token], tribe_id)
+	if  auth == -1
+		status 401
+		return
+	end
+
+	relations = TribeToUser.where("tribe_id = ?", tribe_id)
+	output = {
+		:user_ids => Array.new
+	}
+	relations.each do |relation|
+			output[:user_ids].push(relation.user_id)
+	end
+	status 200
 	return output.to_json
 end
 
 # Gets all messages for a tribe
 get '/tribes/:tribe/messages' do |tribe_id|
-	messages = []
+	# Check if tribe exists
+	if !Tribe.exists?(:id => tribe_id)
+		status 404
+		return
+	end
+
+	# Authenticate
+	auth = isAuthorizedTribe(params[:token], tribe_id)
+	if  auth == -1
+		status 401
+		return
+	end
+
+	# Build output
+	output = {
+		:messages => []
+	}
 	length = getLength(tribe_id)
 	(1..length-1).each do |i|
 		message = getMessage(tribe_id, i.to_s)
-		messages.push(message)
+		output[:messages].push(message)
 	end
-	messages.to_json
+	status 200
+	body output.to_json
+	return
 end
 
 # Gets a specific message for a tribe
@@ -156,14 +192,25 @@ post '/tribes/:tribe/messages/new' do |tribe_id|
 end
 
 # Add user to tribe using ids
-get '/tribes/:tribe/add/users/:user' do |tribe_id, user_id|
+post '/tribes/:tribe/add/users/:user' do |tribe_id, user_id|
+	# Authenticate
+	auth = isAuthorizedTribe(params[:token], tribe_id)
+	if  auth == -1
+		status 401
+		return
+	end
+	# Check that both user and tribe exist
+	if !Tribe.exists?(:id => tribe_id) or !User.exists?(:id => user_id)
+		status 404
+		return
+	end
 	# Check that relation doesn't already exist
 	if TribeToUser.where("tribe_id = ? AND user_id = ?", tribe_id, user_id).exists?
 		#return "Relation between tribe #{tribe_id} and user #{user_id} already exists"
 		status 403
 		error = {
-		:error_message => "User with id #{user_id} already exists"
-	}
+			:error_message => "User with id #{user_id} already exists"
+		}
 		return
 	end
 	addUserToTribe(user_id, tribe_id)
@@ -172,9 +219,16 @@ get '/tribes/:tribe/add/users/:user' do |tribe_id, user_id|
 end
 
 get '/tribes/:tribe/delete/users/:user' do |tribe_id, user_id|
+	# Authenticate
+	auth = isAuthorizedTribe(params[:token], tribe_id)
+	if  auth == -1
+		status 401
+		return
+	end
 	if !TribeToUser.where("tribe_id = ? AND user_id = ?", tribe_id.to_s, user_id.to_s).exists?
 		#return "Relation between tribe #{tribe_id} and user #{user_id} does not exist"
-		status 
+		status 403
+		return
 	end
 	relations = TribeToUser.where("tribe_id = ? AND user_id = ?", tribe_id, user_id)
 	relation = relations[0]
@@ -186,7 +240,6 @@ end
 # Lists all tribes that the user is a part of
 get '/users/:user/tribes' do |user_id|
 	tribe_ids = getUserTribes(user_id)
-
 	output = []
 	tribe_ids.each do |tribe_id|
 		tribe = Tribe.find(tribe_id)
@@ -202,9 +255,14 @@ post '/login' do
 		status 400
 		return
 	end
-	output = checkLogin(username, password)
-	if output.to_i > 0
+	login_status = checkLogin(username, password)
+	if login_status.to_i > 0
 		status 200
+		token = createSession(login_status)
+		output = {
+			:token => token
+		}
+		body output.to_json
 	else
 		status 403
 	end
