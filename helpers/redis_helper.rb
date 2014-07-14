@@ -17,10 +17,13 @@ def getLength(tribe_id)
 end
 
 def sendMessage(mes_content, author_id, recipient_type, recipient_id)
+	date = Time.new
+	date_str = date.strftime("%d %b %Y %H:%M:%S.%3N")
+	puts date_str
 	length = getLength(recipient_id)
 	puts length
 	if recipient_type == 0 # 0 is for TRIBE
-		$redis.hmset('tribe:'+recipient_id.to_s+':message:'+length.to_s, 'content', mes_content, 'author', author_id)
+		$redis.hmset('tribe:'+recipient_id.to_s+':message:'+length.to_s, 'content', mes_content, 'author', author_id, 'date', date_str)
 		$redis.hincrby('tribe:'+recipient_id.to_s, 'length', 1)
 	# Need elsif recipient_type == 1
 	end
