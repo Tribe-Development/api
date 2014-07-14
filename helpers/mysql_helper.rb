@@ -89,3 +89,8 @@ def createSession(user_id)
 	session.save
 	return token
 end
+
+def deleteSession(token)
+	session = Session.where(:token => token).take
+	session.destroy
+end

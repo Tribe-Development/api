@@ -45,6 +45,28 @@ post '/login' do
 	return
 end
 
+# Deletes session
+post '/logout' do
+	if !params[:token]
+		status 400
+		return
+	end
+	deleteSession(params[:token])
+	status 200
+	return
+end
+
+# Check if username exists
+get '/users/:username/exists' do |username|
+	# Check that username doesn't already exist
+	if User.exists?(:username => username)
+		status 403
+		return
+	end
+	status 200
+	return
+end
+
 ## USER
 # Create new user using POST params
 post '/users/new' do
@@ -74,16 +96,7 @@ post '/users/new' do
 	return
 end
 
-# Check if username exists
-get '/users/:username/exists' do |username|
-	# Check that username doesn't already exist
-	if User.exists?(:username => username)
-		status 403
-		return
-	end
-	status 200
-	return
-end
+
 
 # Deletes a user
 get '/users/:user/delete' do |user_id|
@@ -203,24 +216,6 @@ post '/tribes/:tribe/messages/new' do |tribe_id|
 	return
 end
 
-
-
-
-
-
-
-
-
-
-# Outputs tribe_id and name
-get '/tribes/:tribe' do |tribe_id|
-	tribe = Tribe.find(tribe_id)
-	output = {:id => tribe.id, :name => tribe.name}
-	return output.to_json
-end
-
-
-
 # Gets all messages for a tribe
 get '/tribes/:tribe/messages' do |tribe_id|
 	# Check if tribe exists
@@ -252,10 +247,47 @@ end
 
 # Gets a specific message for a tribe
 get '/tribes/:tribe/messages/:message' do |tribe_id, message_id|
-	response['Access-Control-Allow-Origin'] = 'http://54.191.143.176:4568'
+	# Check if tribe exists
+	if !Tribe.exists?(:id => tribe_id)
+		status 404
+		return
+	end
+
+	# Authenticate
+	auth = isAuthorizedTribe(params[:token], tribe_id)
+	if  auth == -1
+		status 401
+		return
+	end
+
+	# Check if message exists
+	if !messageExists(tribe_id, message_id)
+		status 404
+		return
+	end
+
 	message_obj = getMessage(tribe_id, message_id)
 	return message_obj.to_json
 end
+
+
+
+
+
+
+
+# Outputs tribe_id and name
+get '/tribes/:tribe' do |tribe_id|
+	tribe = Tribe.find(tribe_id)
+	output = {:id => tribe.id, :name => tribe.name}
+	return output.to_json
+end
+
+
+
+
+
+
 
 
 

@@ -37,3 +37,7 @@ end
 def createTribeRedis(tribe_id)
 	$redis.hmset('tribe:'+tribe_id.to_s, 'length', 1)
 end
+
+def messageExists(tribe_id, message_id)
+	$redis.exists('tribe:'+tribe_id+':message:'+message_id)
+end
