@@ -29,7 +29,7 @@ post '/tribes/new' do
 		ret = {
 			:error_message => "Parameter 'name' is empty"
 		}
-		body ret
+		body ret.to_json
 		return
 	end
 
@@ -39,7 +39,7 @@ post '/tribes/new' do
 		ret = {
 			:error_message => "Tribe already exists"
 		}
-		body ret
+		body ret.to_json
 		return
 	end
 	puts name
@@ -64,7 +64,7 @@ post '/users/new' do
 		ret = {
 			:error_message => "Bad Request: Empty parameter(s)"
 		}
-		body ret
+		body ret.to_json
 		return
 	end
 	# Check that username doesn't already exist
@@ -73,7 +73,7 @@ post '/users/new' do
 		ret = {
 			:error_message => "User already exists"
 		}
-		body ret
+		body ret.to_json
 		return
 	end
 	createUser(username, password, first_name, last_name)
@@ -160,13 +160,15 @@ get '/tribes/:tribe/add/users/:user' do |tribe_id, user_id|
 	# Check that relation doesn't already exist
 	if TribeToUser.where("tribe_id = ? AND user_id = ?", tribe_id, user_id).exists?
 		#return "Relation between tribe #{tribe_id} and user #{user_id} already exists"
-		return 0
-	end
-	addUserToTribe(user_id, tribe_id)
-	error = {
+		status 403
+		error = {
 		:error_message => "User with id #{user_id} already exists"
 	}
-	return 1
+		return
+	end
+	addUserToTribe(user_id, tribe_id)
+	status 200
+	return
 end
 
 get '/tribes/:tribe/delete/users/:user' do |tribe_id, user_id|
