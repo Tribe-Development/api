@@ -15,6 +15,7 @@ def createTribeSQL(name)
 	tribe = Tribe.new
 	tribe.name = name
 	tribe.save
+	return tribe.id
 end
 
 def deleteTribeSQL(tribe_id)
@@ -97,4 +98,11 @@ def deleteSession(token)
 	session = Session.where(:token => token).take
 	session.destroy
 	return 200
+end
+
+def createFriendRequest(sender_id, recipient_id)
+	request = FriendRequest.new
+	request.sender_id = sender_id
+	request.recipient_id = recipient_id
+	request.save
 end

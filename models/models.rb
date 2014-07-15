@@ -21,4 +21,10 @@ class TribeToUser < ActiveRecord::Base
 end
 
 class Session < ActiveRecord::Base
+end 
+
+class Friend < ActiveRecord::Base
+end
+
+class FriendRequest < ActiveRecord::Base
 end

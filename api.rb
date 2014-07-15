@@ -155,13 +155,13 @@ post '/tribes/new' do
 	end
 
 	name = params[:name]
-	createTribeSQL(name)
+	tribe_id = createTribeSQL(name)
 	tribes = Tribe.where("name = ?", name)
 	puts tribes.to_json
 	tribe = tribes[0]
-	createTribeRedis(tribe.id)
+	createTribeRedis(tribe_id)
 	# return "Tribe #{tribe.name} created"
-	addUserToTribe(auth, tribe.id)
+	addUserToTribe(auth, tribe_id)
 	status 200
 	return
 end
@@ -381,6 +381,29 @@ get '/tribes/:tribe' do |tribe_id|
 	return output.to_json
 end
 
+## FRIENDSHIPS
+post '/friends/request' do
+	# PARAMS: token, friend_id
+	# Check params
+	if !params[:token] or !params[:friend_id]
+		status 400
+		return
+	end
+	# Authenticate
+	auth = isAuthorized(params[:token])
+	if  auth == -1
+		status 401
+		return
+	end
+	# Make sure request or friendship doesn't already exist
+	if FriendRequest.where("sender_id = ? and recipient_id = ?", auth, params[:friend_id]).exists? or Friend.where("user_id = ? and friend_id = ?", auth, params[:friend_id]).exists?
+		status 403
+		return
+	end
+	createFriendRequest(auth, params[:friend_id])
+	status 200
+	return
+end
 
 
 

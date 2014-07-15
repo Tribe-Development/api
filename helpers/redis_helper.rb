@@ -46,11 +46,12 @@ def deleteTribeMessage(tribe_id, message_id)
 	length = getLength(tribe_id)
 	$redis.decr("tribe:#{tribe_id.to_s}")
 	$redis.del("tribe:#{tribe_id.to_s}:message:#{message_id.to_s}")
+	puts "tribe:#{tribe_id.to_s}:message:#{message_id.to_s}"
 end
 
 def deleteTribeRedis(tribe_id)
 	length = getLength(tribe_id)
-	[1..length.to_i].each do |i|
+	(1..length.to_i).step(1) do |i|
 		deleteTribeMessage(tribe_id, i)
 	end
 end
