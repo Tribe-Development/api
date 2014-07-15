@@ -176,6 +176,32 @@ get '/tribes/:tribe/users' do |tribe_id|
 	return output.to_json
 end
 
+# Change tribe name
+post '/tribes/:tribe/edit/name' do |tribe_id|
+	# Check that params exist
+	if !params[:tribe_name]
+		status 400
+		return
+	end
+	# Make sure tribe exists
+	if !Tribe.exists?(:id => tribe_id)
+		status 404
+		return
+	end
+	# Authenticate for tribe
+	auth = isAuthorizedTribe(params[:token], tribe_id)
+	if auth == -1
+		status 401
+		return
+	end
+	# Change name
+	tribe = Tribe.find(tribe_id)
+	tribe.name = params[:tribe_name]
+	tribe.save
+	status 200
+	return
+end
+
 # Remove user from a tribe
 post '/tribes/:tribe/remove/users/:user' do |tribe_id, user_id|
 	# Check to see tribe_id and user_id exist
@@ -204,7 +230,7 @@ post '/tribes/:tribe/remove/users/:user' do |tribe_id, user_id|
 end
 
 # Deletes a tribe
-get '/tribes/:tribe/delete' do |tribe_id|
+post '/tribes/:tribe/delete' do |tribe_id|
 	deleteTribe(tribe_id)
 end
 
