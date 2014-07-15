@@ -176,6 +176,33 @@ get '/tribes/:tribe/users' do |tribe_id|
 	return output.to_json
 end
 
+# Remove user from a tribe
+post '/tribes/:tribe/remove/users/:user' do |tribe_id, user_id|
+	# Check to see tribe_id and user_id exist
+	if !Tribe.exists?(:id => tribe_id) or !User.exists?(:id => user_id)
+		status 403
+		return
+	end
+	# Authenticate
+	auth = isAuthorizedTribe(params[:token], tribe_id)
+	if  auth == -1
+		status 401
+		return
+	end
+	# Check to make sure user is a part of the tribe
+	if !TribeToUser.where("tribe_id = ? AND user_id = ?", tribe_id.to_s, user_id.to_s).exists?
+		#return "Relation between tribe #{tribe_id} and user #{user_id} does not exist"
+		status 403
+		return
+	end
+	# Remove the User from the Tribe
+	relations = TribeToUser.where("tribe_id = ? AND user_id = ?", tribe_id, user_id)
+	relation = relations[0]
+	relation.destroy()
+	status 200
+	return
+end
+
 # Deletes a tribe
 get '/tribes/:tribe/delete' do |tribe_id|
 	deleteTribe(tribe_id)
@@ -315,25 +342,6 @@ post '/tribes/:tribe/add/users/:user' do |tribe_id, user_id|
 	addUserToTribe(user_id, tribe_id)
 	status 200
 	return
-end
-
-get '/tribes/:tribe/delete/users/:user' do |tribe_id, user_id|
-	# Authenticate
-	auth = isAuthorizedTribe(params[:token], tribe_id)
-	if  auth == -1
-		status 401
-		return
-	end
-	if !TribeToUser.where("tribe_id = ? AND user_id = ?", tribe_id.to_s, user_id.to_s).exists?
-		#return "Relation between tribe #{tribe_id} and user #{user_id} does not exist"
-		status 403
-		return
-	end
-	relations = TribeToUser.where("tribe_id = ? AND user_id = ?", tribe_id, user_id)
-	relation = relations[0]
-	relation.destroy()
-	#{}"User #{user_id} removed from tribe #{tribe_id}"
-	return 1
 end
 
 # Lists all tribes that the user is a part of
