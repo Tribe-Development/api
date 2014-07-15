@@ -17,7 +17,7 @@ def createTribeSQL(name)
 	tribe.save
 end
 
-def deleteTribe(tribe_id)
+def deleteTribeSQL(tribe_id)
 	tribe = Tribe.find(tribe_id)
 	# Delete all relations
 	relations = TribeToUser.where('tribe_id = ?', tribe_id)

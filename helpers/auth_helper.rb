@@ -8,6 +8,7 @@ def isAuthorizedTribe(token, tribe_id)
 	session = Session.where(token: token).take
 	# Get user_id associated with session
 	user_id = session.user_id
+	return user_id
 	# Check if user_id is part of given tribe
 	auth_users = getTribeUsers(tribe_id)
 	if auth_users.include?(user_id)
@@ -17,8 +18,16 @@ def isAuthorizedTribe(token, tribe_id)
 	end
 end
 
-def isAuthorizedUser()
+def isAuthorizedUser(token, user_id)
 
+end
+
+def isAuthorized(token)
+	if !Session.exists?(:token => token)
+		return -1
+	end
+	session = Session.where(token: token).take
+	return session.user_id
 end
 
 def checkSession(token)

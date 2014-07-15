@@ -90,7 +90,15 @@ post '/users/new' do
 		body ret.to_json
 		return
 	end
+	# Create user
 	createUser(username, password, first_name, last_name)
+	# Log user in
+	login_status = checkLogin(username, password)
+	token = createSession(login_status)
+		output = {
+			:token => token
+		}
+		body output.to_json
 	status 200
 	return
 end
@@ -117,6 +125,17 @@ get '/users/:user/delete' do |user_id|
 	return 1
 end
 
+# Lists all tribes that the user is a part of
+get '/users/:user/tribes' do |user_id|
+	tribe_ids = getUserTribes(user_id)
+	output = []
+	tribe_ids.each do |tribe_id|
+		tribe = Tribe.find(tribe_id)
+		output.push({:id => tribe.id, :name => tribe.name})
+	end
+	return output.to_json
+end
+
 ## TRIBE
 # Creates a new tribe using POST params
 post '/tribes/new' do
@@ -128,24 +147,21 @@ post '/tribes/new' do
 		body ret.to_json
 		return
 	end
-
-	name = params[:name]
-	if Tribe.exists?(:name => name)
-		status 403
-		ret = {
-			:error_message => "Tribe already exists"
-		}
-		body ret.to_json
+	# Authenticate
+	auth = isAuthorized(params[:token])
+	if  auth == -1
+		status 401
 		return
 	end
-	puts name
+
+	name = params[:name]
 	createTribeSQL(name)
 	tribes = Tribe.where("name = ?", name)
 	puts tribes.to_json
 	tribe = tribes[0]
 	createTribeRedis(tribe.id)
 	# return "Tribe #{tribe.name} created"
-	addUserToTribe()
+	addUserToTribe(auth, tribe.id)
 	status 200
 	return
 end
@@ -229,9 +245,45 @@ post '/tribes/:tribe/remove/users/:user' do |tribe_id, user_id|
 	return
 end
 
-# Deletes a tribe
+# Add user to tribe using ids
+post '/tribes/:tribe/add/users/:user' do |tribe_id, user_id|
+	# Authenticate
+	auth = isAuthorizedTribe(params[:token], tribe_id)
+	if  auth == -1
+		status 401
+		return
+	end
+	# Check that both user and tribe exist
+	if !Tribe.exists?(:id => tribe_id) or !User.exists?(:id => user_id)
+		status 404
+		return
+	end
+	# Check that relation doesn't already exist
+	if TribeToUser.where("tribe_id = ? AND user_id = ?", tribe_id, user_id).exists?
+		#return "Relation between tribe #{tribe_id} and user #{user_id} already exists"
+		status 403
+		error = {
+			:error_message => "User with id #{user_id} already exists"
+		}
+		return
+	end
+	addUserToTribe(user_id, tribe_id)
+	status 200
+	return
+end
+
+# Deletes a tribe - for dev will be removed later
 post '/tribes/:tribe/delete' do |tribe_id|
-	deleteTribe(tribe_id)
+	# Check that tribe exists
+	if !Tribe.exists?(:id => tribe_id)
+		status 404
+		return
+	end
+	# Delete tribe
+	deleteTribeSQL(tribe_id)
+	deleteTribeRedis(tribe_id)
+	status 200
+	return
 end
 
 ## MESSAGES
@@ -322,12 +374,6 @@ get '/tribes/:tribe/messages/:message' do |tribe_id, message_id|
 	return message_obj.to_json
 end
 
-
-
-
-
-
-
 # Outputs tribe_id and name
 get '/tribes/:tribe' do |tribe_id|
 	tribe = Tribe.find(tribe_id)
@@ -341,42 +387,3 @@ end
 
 
 
-
-
-# Add user to tribe using ids
-post '/tribes/:tribe/add/users/:user' do |tribe_id, user_id|
-	# Authenticate
-	auth = isAuthorizedTribe(params[:token], tribe_id)
-	if  auth == -1
-		status 401
-		return
-	end
-	# Check that both user and tribe exist
-	if !Tribe.exists?(:id => tribe_id) or !User.exists?(:id => user_id)
-		status 404
-		return
-	end
-	# Check that relation doesn't already exist
-	if TribeToUser.where("tribe_id = ? AND user_id = ?", tribe_id, user_id).exists?
-		#return "Relation between tribe #{tribe_id} and user #{user_id} already exists"
-		status 403
-		error = {
-			:error_message => "User with id #{user_id} already exists"
-		}
-		return
-	end
-	addUserToTribe(user_id, tribe_id)
-	status 200
-	return
-end
-
-# Lists all tribes that the user is a part of
-get '/users/:user/tribes' do |user_id|
-	tribe_ids = getUserTribes(user_id)
-	output = []
-	tribe_ids.each do |tribe_id|
-		tribe = Tribe.find(tribe_id)
-		output.push({:id => tribe.id, :name => tribe.name})
-	end
-	return output.to_json
-end
