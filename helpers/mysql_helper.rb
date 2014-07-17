@@ -14,6 +14,10 @@ end
 def createTribeSQL(name)
 	tribe = Tribe.new
 	tribe.name = name
+	date = Time.now
+	date_str = date.strftime("%d %b %Y %H:%M:%S")
+	puts date_str	
+	tribe.last_updated = date_str
 	tribe.save
 	return tribe.id
 end
@@ -42,7 +46,7 @@ def getUserTribes(user_id)
 	relations = TribeToUser.where(:user_id => user_id)
 	tribes = []
 	relations.each do |relation|
-		tribes.push(relation.user_id)
+		tribes.push(relation.tribe_id)
 	end
 	return tribes
 end
@@ -105,4 +109,20 @@ def createFriendRequest(sender_id, recipient_id)
 	request.sender_id = sender_id
 	request.recipient_id = recipient_id
 	request.save
+end
+
+def acceptRequest(request_id)
+	# Get request
+	request = FriendRequest.find(request_id)
+	# Add to friends table
+	friend1 = Friend.new
+	friend1.user_id = request.sender_id
+	friend1.friend_id = request.recipient_id
+	friend1.save
+	friend2 = Friend.new
+	friend2.user_id = request.recipient_id
+	friend2.friend_id = request.sender_id
+	friend2.save
+	# Delete request
+	request.destroy()
 end

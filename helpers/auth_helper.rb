@@ -19,7 +19,14 @@ def isAuthorizedTribe(token, tribe_id)
 end
 
 def isAuthorizedUser(token, user_id)
-
+	if !Session.exists?(:token => token)
+		return -1
+	end
+	session = Session.where(token: token).take
+	if session.user_id == user_id
+			return session.user_id
+	end
+	return -1
 end
 
 def isAuthorized(token)

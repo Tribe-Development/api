@@ -10,11 +10,9 @@ ActiveRecord::Base.establish_connection(
 )
 
 class User < ActiveRecord::Base
-
 end
 
 class Tribe < ActiveRecord::Base
-
 end
 
 class TribeToUser < ActiveRecord::Base
