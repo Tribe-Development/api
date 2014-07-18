@@ -26,3 +26,6 @@ end
 
 class FriendRequest < ActiveRecord::Base
 end
+
+class FriendConversation < ActiveRecord::Base
+end

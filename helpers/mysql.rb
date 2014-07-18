@@ -16,7 +16,6 @@ def createTribeSQL(name)
 	tribe.name = name
 	date = Time.now
 	date_str = date.strftime("%d %b %Y %H:%M:%S")
-	puts date_str	
 	tribe.last_updated = date_str
 	tribe.save
 	return tribe.id
@@ -125,4 +124,39 @@ def acceptRequest(request_id)
 	friend2.save
 	# Delete request
 	request.destroy()
+end
+
+def updateTribeSQL(recipient_id)
+	tribe = Tribe.find(recipient_id)
+	date = Time.now
+	date_str = date.strftime("%d %b %Y %H:%M:%S")
+	tribe.last_updated = date_str
+	tribe.save
+end
+
+def updateConversation(convo_id)
+	convo = FriendConversation.new
+	date = Time.now
+	date_str = date.strftime("%d %b %Y %H:%M:%S")
+	convo.last_updated = date_str
+	convo.save
+end
+
+def getFriendConvos(user_id)
+    convos = FriendConversation.where("user1_id = ? or user2_id = ?", user_id, user_id)
+    convo_ids = []
+    convos.each do |convo|
+        convo_ids.push(convo.id) 
+    end
+    return convo_ids 
+end
+
+def getFriendConvoTitle(convo_id, user_id)
+    convo = FriendConversation.find(convo_id)
+    user = convo.user1_id
+    if convo.user1_id == user_id
+        user = convo.user2_id 
+    end
+    user_obj = User.find(user)
+    return user_obj.first_name + " " + user_obj.last_name
 end

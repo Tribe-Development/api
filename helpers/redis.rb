@@ -12,20 +12,25 @@ def getMessage(tribe_id, message_id)
 	output.merge!(:username => username)
 end
 
-def getLength(tribe_id)
-	return $redis.get('tribe:'+tribe_id).to_i
+def getLength(recipient_id, recipient_type)
+    if recipient_type == 1
+        return $redis.get('friend:'+recipient_id.to_s).to_i
+    end
+	return $redis.get('tribe:'+recipient_id.to_s).to_i
 end
 
 def sendMessage(mes_content, author_id, recipient_type, recipient_id)
 	date = Time.new
 	date_str = date.strftime("%d %b %Y %H:%M:%S.%3N")
 	puts date_str
-	length = getLength(recipient_id)
+	length = getLength(recipient_id, recipient_type)
 	puts length
 	if recipient_type == 0 # 0 is for TRIBE
 		$redis.hmset('tribe:'+recipient_id.to_s+':message:'+length.to_s, 'content', mes_content, 'author', author_id, 'date', date_str)
 		$redis.incr('tribe:'+recipient_id.to_s)
-	# Need elsif recipient_type == 1
+	elsif recipient_type == 1 # 1 for FRIEND convo
+		$redis.hmset('friend:'+recipient_id.to_s+':message:'+length.to_s, 'content', mes_content, 'author', author_id, 'date', date_str)
+		$redis.incr('friend:'+recipient_id.to_s)
 	end
 	pub_obj = {:recipient_type => recipient_type}
 	pub_obj.merge!(:recipient_id => recipient_id)

@@ -1,5 +1,4 @@
 require_relative "../models/models.rb"
-require_relative "../helpers/mysql_helper.rb"
 
 def isAuthorizedTribe(token, tribe_id)
 	if !Session.exists?(:token => token)
@@ -23,8 +22,10 @@ def isAuthorizedUser(token, user_id)
 		return -1
 	end
 	session = Session.where(token: token).take
-	if session.user_id == user_id
-			return session.user_id
+	puts session.user_id
+	puts user_id
+	if session.user_id.to_i == user_id.to_i
+		return session.user_id
 	end
 	return -1
 end
