@@ -17,13 +17,13 @@ post '/tribes/new' do
 	end
 
 	name = params[:name]
+    
+    # Create tribe
 	tribe_id = createTribeSQL(name)
-	tribes = Tribe.where("name = ?", name)
-	puts tribes.to_json
-	tribe = tribes[0]
-	createTribeRedis(tribe_id)
-	# return "Tribe #{tribe.name} created"
+	
+	# Add creator to tribe
 	addUserToTribe(auth, tribe_id)
+    
 	status 200
 	return
 end

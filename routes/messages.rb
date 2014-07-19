@@ -1,37 +1,78 @@
-##########################################
-# Create new message in a specific tribe #
-##########################################
-post '/tribes/:tribe/messages/new' do |tribe_id|
-	# Check if tribe exists
-	if !Tribe.exists?(:id => tribe_id)
-		status 404
-		return
-	end
-	
-	# Make sure request is valid
-	if !params[:content]
-		status 400
-		return
-	end
-
-	# Authenticate
-	auth = isAuthorizedTribe(params[:token], tribe_id)
+##################
+# Send a message #
+##################
+post '/messages/new' do
+    
+    # Authenticate
+	auth = isAuthorized(params[:token])
 	if  auth == -1
 		status 401
 		return
 	end
+     
+    # Check params
+    if !params[:message_content] or !params[:chat_id]
+        status 400
+        return
+    end
+    
+    # Check that chat exists
+    if !Chat.exists?(:id => params[:chat_id])
+        status 404
+        return
+    end
+    
+    # Check that user is authorized for that chat
+    chat_subscribers = getChatSubscribers(params[:chat_id])
+    if !chat_subscribers.include?(auth)
+        status 401
+        return
+    end
+    
+    # Create new message in redis
+    sendMessage(params[:message_content], auth, params[:chat_id])
+    
+    status 200
+    return
+end
 
-	# Put POST data in variables
-	author_id = auth
-	content = params[:content]
-	recipient_type = 0 # 0 for group chat
-	recipient_id = tribe_id
-
-	# Create message in redis database
-	sendMessage(content, author_id, recipient_type, recipient_id) # PARAMS mes_content, author_id, recipient_type, recipient_id
-	updateTribeSQL(recipient_id)
-	status 200
-	return
+###############################
+# Get all messages for a chat #
+###############################
+get '/messages/all' do
+    
+    # Authenticate
+	auth = isAuthorized(params[:token])
+	if  auth == -1
+		status 401
+		return
+	end
+    
+    # Check params
+    if !params[:chat_id]
+        status 400
+        return
+    end
+    
+    # Check that chat exists
+    if !Chat.exists?(:id => params[:chat_id])
+        status 404
+        return
+    end
+    
+    # Check that user is authorized for chat
+    if !isAuthorizedChat(params[:token], params[:chat_id])
+        status 401
+        return
+    end
+    
+    # Query redis for messages
+    messages = getAllMessages(params[:chat_id])
+    body_obj = {
+        :messages => messages    
+    }
+    status 200
+    return body_obj.to_json
 end
 
 #################################
@@ -101,51 +142,6 @@ get '/tribes/:tribe' do |tribe_id|
 	return output.to_json
 end
 
-#########################
-# Send a user a message #
-#########################
-post '/users/:user_id/messages/new' do |recipient_id|
-	# Check params
-	if !params[:content]
-		status 400
-		return
-	end
-
-	# Authenticate (is friend) ---NEEDS TO BE DONE
-	auth = isAuthorized(params[:token])
-	if  auth == -1
-		status 401
-		return
-	end
-	convo = {}
-	# Check if conversation exists between users
-	if !FriendConversation.where("user1_id = ? AND user2_id = ?", auth, recipient_id).exists? and !FriendConversation.where("user1_id = ? AND user2_id = ?", recipient_id, auth).exists?
-		# (SQL) Create new conversation between users (need to create one for each way)
-		convo = FriendConversation.new
-		convo.user1_id = auth
-		convo.user2_id = recipient_id
-		date = Time.now
-		date_str = date.strftime("%d %b %Y %H:%M:%S")
-		convo.last_updated = date_str
-		convo.save
-		# (Redis) Create new conversation length
-		$redis.set('friend:'+convo.id.to_s, 1)
-	elsif !FriendConversation.where("user1_id = ? AND user2_id = ?", auth, recipient_id).exists?
-		convo = FriendConversation.where("user1_id = ? AND user2_id = ?", recipient_id, auth).take
-	else
-		convo = FriendConversation.where("user1_id = ? AND user2_id = ?", auth, recipient_id).take
-	end
-	# Create new message in existing conversation
-	sendMessage(params[:content], auth, 1, convo.id)
-	# Last updated
-	date = Time.now
-	date_str = date.strftime("%d %b %Y %H:%M:%S")
-	convo.last_updated = date_str
-	convo.save
-	status 200
-	return
-end
-
 ###################################################
 # Get all convos for a user (both tribe and user) #
 ###################################################
@@ -168,7 +164,8 @@ get '/convos' do
             :title          => tribe.name,
             :last_updated   => tribe.last_updated,
             :type           => 0, # 0 for tribe
-            :recent_message => "needs to be implemented"
+            :recent_message => "needs to be implemented",
+            :id             => tribe.id
         }
         # Append tribe data to output array
         output.push(entry)
@@ -182,7 +179,8 @@ get '/convos' do
             :title          => getFriendConvoTitle(convo_id, auth),
             :last_updated   => convo.last_updated,
             :type           => 1,
-            :recent_message => "needs to be implemented"
+            :recent_message => "needs to be implemented",
+            :id             => convo.id
         }
         output.push(entry)
     end

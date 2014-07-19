@@ -1,4 +1,25 @@
-require_relative "../models/models.rb"
+#########################
+# Authorized for a chat #
+#########################
+def isAuthorizedChat(token, chat_id)
+    
+    # Check if session exists
+    if !Session.exists?(:token => token)
+		return -1
+	end
+    
+    # Get user_id associated with session
+    session = Session.where(token: token).take
+	user_id = session.user_id
+	
+	# Check if user_id is part of given chat
+	auth_users = getChatSubscribers(chat_id)
+	if auth_users.include?(user_id)
+		return user_id
+	else
+		return -1
+	end
+end
 
 def isAuthorizedTribe(token, tribe_id)
 	if !Session.exists?(:token => token)
@@ -7,7 +28,7 @@ def isAuthorizedTribe(token, tribe_id)
 	session = Session.where(token: token).take
 	# Get user_id associated with session
 	user_id = session.user_id
-	return user_id
+	
 	# Check if user_id is part of given tribe
 	auth_users = getTribeUsers(tribe_id)
 	if auth_users.include?(user_id)

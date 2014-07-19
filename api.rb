@@ -1,4 +1,6 @@
 # api.rb
+
+# Global requires
 require "sinatra"
 require "rubygems"
 require_relative "models/models.rb"
@@ -7,6 +9,7 @@ require "json"
 
 set :environment, :production
 
+# Start sinatra
 class App < Sinatra::Application
 
 end

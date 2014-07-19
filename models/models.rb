@@ -29,3 +29,9 @@ end
 
 class FriendConversation < ActiveRecord::Base
 end
+
+class Chat < ActiveRecord::Base
+end
+
+class ChatSubscriber < ActiveRecord::Base
+end

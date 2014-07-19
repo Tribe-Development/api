@@ -12,13 +12,42 @@ def createUser(username, password, first_name, last_name)
 end
 
 def createTribeSQL(name)
+    
+    # Set date
+    date = Time.now
+	date_str = date.strftime("%d %b %Y %H:%M:%S")
+    
+    # Create chat SQL
+    chat = Chat.new
+    chat.last_updated = date_str
+    chat.save
+    
+    # Create chat Redis
+    createChatRedis(chat.id)
+    
+    # Create tribe
 	tribe = Tribe.new
 	tribe.name = name
-	date = Time.now
-	date_str = date.strftime("%d %b %Y %H:%M:%S")
+    tribe.chat_id = chat.id
 	tribe.last_updated = date_str
 	tribe.save
+    
 	return tribe.id
+end
+
+##############################
+# Gets subscribers of a chat #
+##############################
+def getChatSubscribers(chat_id)
+    # Get all relations for chat
+    relations = ChatSubscriber.where("chat_id = ?", chat_id)
+    
+    # Create output
+    output = []
+    relations.each do |relation|
+         output.push(relation.subscriber_id)
+    end
+    return output
 end
 
 def deleteTribeSQL(tribe_id)
@@ -34,11 +63,18 @@ def deleteTribeSQL(tribe_id)
 end
 
 def addUserToTribe(user_id, tribe_id)
+    # Create tribe - user relation
 	relation = TribeToUser.new
 	relation.user_id = user_id
 	relation.tribe_id = tribe_id
 	relation.save
-	return "User #{user_id} added to tribe #{tribe_id}" 
+	
+    # Add user to tribe chat
+    tribe = Tribe.find(tribe_id)
+    chat_subscriber = ChatSubscriber.new
+    chat_subscriber.chat_id = tribe.chat_id
+    chat_subscriber.subscriber_id = user_id
+    chat_subscriber.save
 end
 
 def getUserTribes(user_id)
