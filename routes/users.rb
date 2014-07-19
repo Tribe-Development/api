@@ -58,18 +58,19 @@ get '/users/:user/delete' do |user_id|
 end
 
 # Lists all tribes that the user is a part of
-get '/users/:user/tribes' do |user_id|
+get '/users/tribes' do
 	if !params[:token]
-		puts "ng"
+        status 400
+        return
 	end
 	# Authenticate
-	auth = isAuthorizedUser(params[:token], user_id)
+	auth = isAuthorized(params[:token])
 	if  auth == -1
 		status 401
 		return
 	end
 	# Do stuff
-	tribe_ids = getUserTribes(user_id)
+	tribe_ids = getUserTribes(auth)
 	tribes = []
 	tribe_ids.each do |tribe_id|
 		tribe = Tribe.find(tribe_id)
