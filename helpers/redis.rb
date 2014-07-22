@@ -6,7 +6,9 @@ $redis = Redis.new(:host => 'localhost', :port => 6379)
 #################
 def getMessage(chat_id, message_id)
     # Get message information
-	output = $redis.hgetall('chat:'+chat_id.to_s+':message:'+message_id.to_s)
+    last = message_id.to_i + 1.to_i
+	output = $redis.zrange("chat:#{chat_id.to_s}", message_id.to_s, last.to_s)
+    output = JSON.parse(output[0])
     
     # Get author username and append to output
 	author_id = output["author"].to_i
@@ -15,6 +17,7 @@ def getMessage(chat_id, message_id)
 	author = User.find(author_id)
 	username = author.username
 	output.merge!(:username => username)
+    return output
 end
 
 ####################
@@ -24,39 +27,43 @@ def getAllMessages(chat_id)
     length = getLength(chat_id)
     
     # Loop through all messages and append to output
+    message_strings = $redis.zrevrange("chat:#{chat_id}", 0, -1)
+    
+    # Create messages from json strings
     messages = []
-    (1..length-1).step(1) do |i|
-        message = getMessage(chat_id, i)
-        messages.push(message)
+    message_strings.each do |message_string|
+        messages.push(JSON.parse(message_string))
     end
     return messages
 end
 
 ##################################
-# Get number of messages in chat #
+# Get number of messages in chat # 
 ##################################
 def getLength(chat_id)
-	return $redis.get('chat:'+chat_id.to_s).to_i
+	return $redis.zcard("chat:#{chat_id.to_s}").to_i
 end
 
 ##################
-# Send a message #
+# Send a message # 
 ##################
 def sendMessage(mes_content, author_id, chat_id)
     
     # Get date and length of chat
 	date = Time.new
 	date_str = date.strftime("%d %b %Y %H:%M:%S.%3N")
-	length = getLength(chat_id)
+	###length = getLength(chat_id)
+    length = getLength(chat_id)
     
     # Create message and increment chat
-    $redis.hmset('chat:'+chat_id.to_s+':message:'+length.to_s, 'content', mes_content, 'author', author_id, 'date', date_str)
-    $redis.incr('chat:'+chat_id.to_s)
+    $redis.zadd("chat:#{chat_id}", length+1, '{"content": "'+mes_content+'", "author": "'+author_id.to_s+'", "date": "'+date_str+'"}')
+    ###$redis.hmset('chat:'+chat_id.to_s+':message:'+length.to_s, 'content', mes_content, 'author', author_id, 'date', date_str)
+    ###$redis.incr('chat:'+chat_id.to_s)
     
     # Create publish message (redis)
     pub_obj = {}
 	pub_obj.merge!(:chat_id => chat_id)
-	pub_obj.merge!(:location => length)
+	pub_obj.merge!(:location => length+1)
 	$redis.publish("new.message", pub_obj.to_json)
 	return
 end
@@ -65,7 +72,7 @@ end
 # Create a chat #
 #################
 def createChatRedis(chat_id)
-    $redis.set("chat:#{chat_id}", 1)
+    ###$redis.set("chat:#{chat_id}", 1) 
 end
 
 def messageExists(tribe_id, message_id)

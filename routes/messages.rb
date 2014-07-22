@@ -75,6 +75,100 @@ get '/messages/all' do
     return body_obj.to_json
 end
 
+###########################
+# Gets a specific message #
+###########################
+get '/messages/one' do
+    
+    # Authenticate
+	auth = isAuthorized(params[:token])
+	if  auth == -1
+		status 401
+		return
+	end
+    
+    # Check params
+    if !params[:chat_id] or !params[:message_id]
+        status 400
+        return
+    end
+    
+    # Check that chat exists
+    if !Chat.exists?(:id => params[:chat_id])
+        status 404
+        return
+    end
+    
+    # Check that user is authorized for chat
+    if !isAuthorizedChat(params[:token], params[:chat_id])
+        status 401
+        return
+    end
+    
+    # Query redis for message
+    message = getMessage(params[:chat_id], params[:message_id])
+    body_obj = {
+        :message => message    
+    }
+    status 200
+    return body_obj.to_json
+end
+
+###################################################
+# Get all convos for a user (both tribe and user) #
+###################################################
+get '/convos' do
+    # Authenticate (is friend) ---NEEDS TO BE DONE
+	auth = isAuthorized(params[:token])
+	if  auth == -1
+		status 401
+		return
+	end
+    
+    # Create empty output array
+    output = []
+    
+    # Get all tribes
+    tribe_ids = getUserTribes(auth)
+    tribe_ids.each do |tribe_id|
+        tribe = Tribe.find(tribe_id)
+        entry = {
+            :title          => tribe.name,
+            :last_updated   => tribe.last_updated,
+            :type           => 0, # 0 for tribe
+            :recent_message => "needs to be implemented",
+            :id             => tribe.id
+        }
+        # Append tribe data to output array
+        output.push(entry)
+    end
+    
+    # Get all user convos
+    convo_ids = getFriendConvos(auth)
+    convo_ids.each do |convo_id|
+        convo = FriendConversation.find(convo_id)
+        entry = {
+            :title          => getFriendConvoTitle(convo_id, auth),
+            :last_updated   => convo.last_updated,
+            :type           => 1,
+            :recent_message => "needs to be implemented",
+            :id             => convo.id
+        }
+        output.push(entry)
+    end
+    
+    # Sort by last_updated
+    output.sort! {|a,b| b[:last_updated] <=> a[:last_updated]}
+    body_obj = {
+           :convos => output 
+    }
+    return body_obj.to_json
+end
+
+
+
+
+
 #################################
 # Gets all messages for a tribe #
 #################################
@@ -142,53 +236,4 @@ get '/tribes/:tribe' do |tribe_id|
 	return output.to_json
 end
 
-###################################################
-# Get all convos for a user (both tribe and user) #
-###################################################
-get '/convos' do
-    # Authenticate (is friend) ---NEEDS TO BE DONE
-	auth = isAuthorized(params[:token])
-	if  auth == -1
-		status 401
-		return
-	end
-    
-    # Create empty output array
-    output = []
-    
-    # Get all tribes
-    tribe_ids = getUserTribes(auth)
-    tribe_ids.each do |tribe_id|
-        tribe = Tribe.find(tribe_id)
-        entry = {
-            :title          => tribe.name,
-            :last_updated   => tribe.last_updated,
-            :type           => 0, # 0 for tribe
-            :recent_message => "needs to be implemented",
-            :id             => tribe.id
-        }
-        # Append tribe data to output array
-        output.push(entry)
-    end
-    
-    # Get all user convos
-    convo_ids = getFriendConvos(auth)
-    convo_ids.each do |convo_id|
-        convo = FriendConversation.find(convo_id)
-        entry = {
-            :title          => getFriendConvoTitle(convo_id, auth),
-            :last_updated   => convo.last_updated,
-            :type           => 1,
-            :recent_message => "needs to be implemented",
-            :id             => convo.id
-        }
-        output.push(entry)
-    end
-    
-    # Sort by last_updated
-    output.sort! {|a,b| b[:last_updated] <=> a[:last_updated]}
-    body_obj = {
-           :convos => output 
-    }
-    return body_obj.to_json
-end
+
