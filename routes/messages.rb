@@ -105,6 +105,15 @@ get '/messages/one' do
         return
     end
     
+    # Check that message exists
+    length = getLength(params[:chat_id])
+    puts length
+    puts params[:message_id].to_i
+    if length <= params[:message_id].to_i
+        status 404
+        return
+    end
+    
     # Query redis for message
     message = getMessage(params[:chat_id], params[:message_id])
     body_obj = {
