@@ -2,14 +2,14 @@
 
 ## Contents
 **1. Login**
-* Create a new user
-* Login a user
-* Logout a user
+* [Create a new user](#post-usersnew)
+* [Login a user](#post-login)
+* [Logout a user](#post-logout)
 
 **2. Tribes**
-* Create a new tribe
-* Add a user to a tribe
-* Get a list of all users that are a part of a tribe
+* [Create a new tribe](#post-tribesnew)
+* [Add a user to a tribe](#post-tribestribe_idaddusersuser_id)
+* [Get a list of all users that are a part of a tribe](#get-tribestribe_idusers)
 
 ===
 
@@ -79,8 +79,7 @@ Create a new tribe and add creator to it
 Adds user to said tribe. FRIEND AUTHENTICATION NEEDS TO BE ADDED!
 
 ###### Parameters
-
-* See URL
+See URL...
 ===
 #### GET /tribes/:tribe_id/users
 Get a list of all users in a tribe
