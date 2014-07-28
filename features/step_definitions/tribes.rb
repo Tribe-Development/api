@@ -75,3 +75,30 @@ Then(/^the user (\w+) should be a part of the tribe (\w+)$/) do |username, tribe
         fail(StandardError.new("User is not part of tribe")) 
     end
 end
+
+When(/^I list all the users in the tribe (\w+)$/) do |tribe_name|
+    
+    # Set up http request
+    url = URI.parse("http://localhost:4567")
+    http = Net::HTTP.new(url.host, url.port)
+    
+    # Get tribe id from name
+    tribe_id = Tribe.where("name = ?", tribe_name).take.id
+    
+    # Get list of users in the tribe
+    req = Net::HTTP::Get.new("/tribes/#{tribe_id.to_s}/users?token=#{@token.to_s}")
+    res = http.request(req)
+    puts res.code
+    puts res.body
+    if res.code != '200'
+        fail(StandardError.new("Status code: #{res.code}")) 
+    end
+    @response = JSON.parse(res.body)
+end
+
+Then (/^I should see the JSON response:$/) do |json_response|
+    json_response = JSON.parse(json_response)
+    if @response.to_a != json_response.to_a
+        fail(StandardError.new("Output is not correct"))
+    end
+end

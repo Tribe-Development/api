@@ -61,7 +61,9 @@ post '/tribes/:tribe/add/users/:user' do |tribe_id, user_id|
 	return
 end
 
-# Outputs all users in a tribe
+################################
+# Outputs all users in a tribe #
+################################
 get '/tribes/:tribe/users' do |tribe_id|
 	# Check if tribe exists
 	if !Tribe.exists?(:id => tribe_id)
@@ -78,10 +80,17 @@ get '/tribes/:tribe/users' do |tribe_id|
 
 	relations = TribeToUser.where("tribe_id = ?", tribe_id)
 	output = {
-		:user_ids => Array.new
+		:users => []
 	}
 	relations.each do |relation|
-			output[:user_ids].push(relation.user_id)
+        user = User.find(relation.user_id)
+        user_obj = {
+            :id => user.id,
+            :username => user.username,
+            :image => user.image,
+            :name => user.first_name + " " + user.last_name
+        }
+        output[:users].push(user_obj)
 	end
 	status 200
 	return output.to_json

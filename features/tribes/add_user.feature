@@ -1,4 +1,4 @@
-Feature: Create a tribe and add creator to it
+Feature: Add a user to a tribe
     In order to verify that a user can be added to a tribe
     As a user
     I should be able to add another user to a tribe that I belong to
