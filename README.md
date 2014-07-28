@@ -1,7 +1,9 @@
 # REST API Documentation
 
 # Login / Signup
+
 ### POST /users/new
+Creates a new user
 ###### Parameters
 ```javascript
 {
@@ -21,6 +23,7 @@
 ===
 
 ### POST /login
+Creates a new sessions and returns the session token
 ###### Parameters
 ```javascript
 {
@@ -33,5 +36,15 @@
 ```javascript
 {
     token: integer
+}
+```
+===
+
+### POST /logout
+Destroys the current session
+###### Parameters
+```javascript
+{
+    token: string
 }
 ```
