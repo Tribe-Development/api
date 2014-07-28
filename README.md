@@ -2,8 +2,8 @@
 
 # Login / Signup
 ### POST /users/new
-##### Parameters
-```json
+Parameters
+```javascript
 {
     username:   string,
     password:   string,
@@ -12,8 +12,8 @@
 }
 ```
 
-##### Body
-```json
+Body
+```javascript
 {
     token: integer
 }
@@ -21,7 +21,7 @@
 ===
 
 ### POST /login
-##### Parameters
+Parameters
 ```javascript
 {
     username:   string,
@@ -29,7 +29,7 @@
 }
 ```
 
-##### Body
+Body
 ```javascript
 {
     token: integer
