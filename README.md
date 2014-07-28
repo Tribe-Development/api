@@ -79,7 +79,9 @@ Create a new tribe and add creator to it
 Adds user to said tribe. FRIEND AUTHENTICATION NEEDS TO BE ADDED!
 
 ###### Parameters
-See URL...
+```javascript
+none...
+```
 ===
 #### GET /tribes/:tribe_id/users
 Get a list of all users in a tribe
