@@ -1,8 +1,38 @@
-#api
-Will update as I write tests for each call. Refer to asana for now.
+# REST API Documentation
 
 # Login / Signup
+---
 ### POST /users/new
-**Parameters**
-* username _string_
-* password _string_
+#### Parameters
+```json
+{
+    username:   string,
+    password:   string,
+    first_name: string,
+    last_name:  string
+}
+```
+
+#### Body
+```json
+{
+    token: integer
+}
+```
+---
+
+### POST /login
+#### Parameters
+```json
+{
+    username:   string,
+    password:   string
+}
+```
+
+#### Body
+```json
+{
+    token: integer
+}
+```
