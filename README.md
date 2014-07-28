@@ -8,7 +8,9 @@
 
 **2. Tribes**
 * Create a new tribe
+
 ===
+
 ### 1. Login
 
 #### POST /users/new
