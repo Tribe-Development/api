@@ -7,11 +7,11 @@
 * Logout a user
 
 **2. Tribes**
-* Create a new tribe *
+* Create a new tribe
 
 ## 1. Login
 
-### POST /users/new
+#### POST /users/new
 Creates a new user
 ###### Parameters
 ```javascript
@@ -31,7 +31,7 @@ Creates a new user
 ```
 ===
 
-### POST /login
+#### POST /login
 Creates a new sessions and returns the session token
 ###### Parameters
 ```javascript
@@ -49,7 +49,7 @@ Creates a new sessions and returns the session token
 ```
 ===
 
-### POST /logout
+#### POST /logout
 Destroys the current session
 ###### Parameters
 ```javascript
@@ -60,7 +60,7 @@ Destroys the current session
 
 ## 2. Tribes
 
-### POST /tribes/new
+#### POST /tribes/new
 Create a new tribe and add creator to it
 ###### Parameters
 ```javascript
