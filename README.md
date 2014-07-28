@@ -8,6 +8,8 @@
 
 **2. Tribes**
 * Create a new tribe
+* Add a user to a tribe
+* Get a list of all users that are a part of a tribe
 
 ===
 
@@ -80,3 +82,27 @@ Adds user to said tribe. FRIEND AUTHENTICATION NEEDS TO BE ADDED!
 
 * See URL
 ===
+#### GET /tribes/:tribe_id/users
+Get a list of all users in a tribe
+
+###### Parameters
+```javascript
+{
+    token: string
+}
+```
+
+###### Body
+```javascript
+{
+    users: [
+        {
+            username: string,
+            name: string,
+            id: integer,
+            image: string (url)
+        },
+        ...
+    ]
+}
+```
