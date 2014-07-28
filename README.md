@@ -5,6 +5,7 @@
 * Create a new user
 * Login a user
 * Logout a user
+
 **2. Tribes**
 * Create a new tribe *
 
