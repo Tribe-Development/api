@@ -1,7 +1,6 @@
 # REST API Documentation
 
 # Login / Signup
----
 ### POST /users/new
 #### Parameters
 ```json
@@ -19,7 +18,7 @@
     token: integer
 }
 ```
----
+===
 
 ### POST /login
 #### Parameters
