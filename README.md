@@ -1,9 +1,9 @@
 # REST API Documentation
 
 ## Contents
-1. Login
-    * Create new users
-    * Login a users
+1. **Login**
+    * Create a new user
+    * Login a user
     * Logout a user
 
 ## 1. Login
