@@ -41,6 +41,11 @@ end
 # Get number of messages in chat # 
 ##################################
 def getLength(chat_id)
+    puts "chat:#{chat_id.to_s}"
+    puts $redis.exists("chat:#{chat_id.to_s}")
+    if !$redis.exists("chat:#{chat_id.to_s}")
+        return 0
+    end
 	return $redis.zcard("chat:#{chat_id.to_s}").to_i
 end
 
@@ -73,6 +78,14 @@ end
 #################
 def createChatRedis(chat_id)
     ###$redis.set("chat:#{chat_id}", 1) 
+end
+
+#######################################
+# Get most recent message from a chat #
+#######################################
+def getRecentMessage(chat_id)
+    messages = getAllMessages(chat_id)
+    return messages[0]
 end
 
 def messageExists(tribe_id, message_id)

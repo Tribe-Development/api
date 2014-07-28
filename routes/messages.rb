@@ -32,6 +32,9 @@ post '/messages/new' do
     # Create new message in redis
     sendMessage(params[:message_content], auth, params[:chat_id])
     
+    # Last updated for chat
+    updateChat(params[:chat_id])
+    
     status 200
     return
 end
@@ -137,33 +140,33 @@ get '/convos' do
     # Create empty output array
     output = []
     
-    # Get all tribes
-    tribe_ids = getUserTribes(auth)
-    tribe_ids.each do |tribe_id|
-        tribe = Tribe.find(tribe_id)
-        entry = {
-            :title          => tribe.name,
-            :last_updated   => tribe.last_updated,
-            :type           => 0, # 0 for tribe
-            :recent_message => "needs to be implemented",
-            :id             => tribe.id
+    # Get all chats that user belongs to
+    chat_ids = getUserChats(auth)
+    # Loop through chats and build output
+    output = []
+    chat_ids.each do |chat_id|
+        chat = Chat.find(chat_id)
+        # Check if chats belongs to tribe and if so make image tribe image and title
+        image = ""
+        title = ""
+        if Tribe.where('chat_id = ?', chat_id).exists?
+            tribe = Tribe.where('chat_id = ?', chat_id).take
+            image = tribe.image
+            title = tribe.name
+            
+        # If not: make image other user image
+        else
+            image = getFriendChatImage(chat_id, auth)
+            title = getFriendChatName(chat_id, auth)
+        end
+        chat_obj = {
+            :title          => title,
+            :image          => image,
+            :last_updated   => chat.last_updated,
+            :recent_message => getRecentMessage(chat_id),
+            :chat_id        => chat_id
         }
-        # Append tribe data to output array
-        output.push(entry)
-    end
-    
-    # Get all user convos
-    convo_ids = getFriendConvos(auth)
-    convo_ids.each do |convo_id|
-        convo = FriendConversation.find(convo_id)
-        entry = {
-            :title          => getFriendConvoTitle(convo_id, auth),
-            :last_updated   => convo.last_updated,
-            :type           => 1,
-            :recent_message => "needs to be implemented",
-            :id             => convo.id
-        }
-        output.push(entry)
+        output.push(chat_obj)
     end
     
     # Sort by last_updated

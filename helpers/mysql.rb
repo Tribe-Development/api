@@ -1,16 +1,23 @@
 require_relative "../models/models.rb"
 require 'digest/md5'
 
+#####################
+# Create a new user #
+#####################
 def createUser(username, password, first_name, last_name)
 	user = User.new
 	user.username = username
 	user.password = Digest::MD5.hexdigest(password)
 	user.first_name = first_name
 	user.last_name = last_name
+    user.image = 'http://www.corporatetraveller.ca/assets/images/profile-placeholder.gif'
 	user.save
 	return 1
 end
 
+######################
+# Create a new tribe #
+######################
 def createTribeSQL(name)
     
     # Set date
@@ -30,6 +37,7 @@ def createTribeSQL(name)
 	tribe.name = name
     tribe.chat_id = chat.id
 	tribe.last_updated = date_str
+    tribe.image = 'http://www.corporatetraveller.ca/assets/images/profile-placeholder.gif'
 	tribe.save
     
 	return tribe.id
@@ -48,6 +56,42 @@ def getChatSubscribers(chat_id)
          output.push(relation.subscriber_id)
     end
     return output
+end
+
+#########################
+# Gets chats for a user #
+#########################
+def getUserChats(user_id)
+    # Get all relations
+    relations = ChatSubscriber.where('subscriber_id = ?', user_id)
+    
+    # Build output
+    chats = []
+    relations.each do |relation|
+         chats.push(relation.chat_id)
+    end
+    return chats
+end
+
+####################
+# Add user to chat #
+####################
+def addChatSubscriber(chat_id, user_id)
+    subscriber = ChatSubscriber.new
+    subscriber.chat_id = chat_id
+    subscriber.subscriber_id = user_id
+    subscriber.save
+end
+
+###########################
+# Last updated for a chat #
+###########################
+def updateChat(chat_id)
+	chat = Chat.find(chat_id)
+	date = Time.now
+	date_str = date.strftime("%d %b %Y %H:%M:%S")
+	chat.last_updated = date_str
+	chat.save
 end
 
 def deleteTribeSQL(tribe_id)
@@ -160,6 +204,15 @@ def acceptRequest(request_id)
 	friend2.save
 	# Delete request
 	request.destroy()
+    # Create chat for friends
+    chat = Chat.new
+    # Set date
+    date = Time.now
+	date_str = date.strftime("%d %b %Y %H:%M:%S")
+    chat.last_updated = date_str
+    chat.save
+    addChatSubscriber(chat.id, request.sender_id)
+    addChatSubscriber(chat.id, request.recipient_id)
 end
 
 def updateTribeSQL(recipient_id)
@@ -195,4 +248,40 @@ def getFriendConvoTitle(convo_id, user_id)
     end
     user_obj = User.find(user)
     return user_obj.first_name + " " + user_obj.last_name
+end
+
+def getFriendChatImage(chat_id, user_id)
+    chat = Chat.find(chat_id)
+    
+    # Get relations
+    relations = ChatSubscriber.where("chat_id = ?", chat_id)
+    
+    # Loop through relations and get friend id
+    image = ""
+    relations.each do |relation|
+        if relation.subscriber_id != user_id
+            friend_id = relation.subscriber_id
+            user = User.find(friend_id)
+            image = user.image
+        end
+    end
+    return image
+end
+
+def getFriendChatName(chat_id, user_id)
+    chat = Chat.find(chat_id)
+    
+    # Get relations
+    relations = ChatSubscriber.where("chat_id = ?", chat_id)
+    
+    # Loop through relations and get friend id
+    title = ""
+    relations.each do |relation|
+        if relation.subscriber_id != user_id
+            friend_id = relation.subscriber_id
+            user = User.find(friend_id)
+            title = user.first_name + " " + user.last_name
+        end
+    end
+    return title
 end
