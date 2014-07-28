@@ -1,10 +1,12 @@
 # REST API Documentation
 
 ## Contents
-1. **Login**
-    * Create a new user
-    * Login a user
-    * Logout a user
+**1. Login**
+* Create a new user
+* Login a user
+* Logout a user
+**2. Tribes**
+* Create a new tribe *
 
 ## 1. Login
 
@@ -52,5 +54,24 @@ Destroys the current session
 ```javascript
 {
     token: string
+}
+```
+
+## 2. Tribes
+
+### POST /tribes/new
+Create a new tribe
+###### Parameters
+```javascript
+{
+    name:   string,
+    token:   string
+}
+```
+
+###### Body
+```javascript
+{
+    token: integer
 }
 ```
