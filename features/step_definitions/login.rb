@@ -1,4 +1,5 @@
 require 'net/http'
+require 'json'
 require_relative '../../models/models'
 
 Given(/^table (\w+) is empty$/) do |table_name|
@@ -17,8 +18,12 @@ When(/^I submit a form called signup with username (\w+) and password (\w+)$/) d
     })
     res = http.request(req)
     puts res.code
+    puts res.body
     if res.code != '200'
         fail(StandardError.new("Status code: #{res.code}")) 
+    end
+    if !JSON.parse(res.body).has_key?("token")
+        fail(StandardError.new("Return object doesn't contain token")) 
     end
 end
 
@@ -32,7 +37,11 @@ Then(/^I can login with username (\w+) and password (\w+)$/) do |username, passw
     })
     res = http.request(req)
     puts res.code
+    puts res.body
     if res.code != '200'
         fail(StandardError.new("Status code: #{res.code}")) 
+    end
+    if !JSON.parse(res.body).has_key?("token")
+        fail(StandardError.new("Return object doesn't contain token")) 
     end
 end

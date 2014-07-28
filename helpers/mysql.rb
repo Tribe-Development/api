@@ -159,10 +159,11 @@ def createSession(user_id)
 	time = Time.new
 	secret = "zxv8zq(fsiuu6-46lo9w)*#ei99hr3h%qy!zsl2v8_#7_p@*#q"
 	token = Digest::MD5.hexdigest(time.inspect + secret + user_id.to_s)
+    puts token
 	# Check that token does not already exist
 	if Session.exists?(:token => token)
-		createSession(user_id)
-		return	
+        sleep 0.1
+		return createSession(user_id)
 	end
 	# Set expiration date
 	expiration = time + 604800*2

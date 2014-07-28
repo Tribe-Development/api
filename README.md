@@ -12,7 +12,7 @@
 }
 ```
 
-###### Body
+##### Body
 ```javascript
 {
     token: integer
@@ -29,7 +29,7 @@
 }
 ```
 
-###### Body
+##### Body
 ```javascript
 {
     token: integer

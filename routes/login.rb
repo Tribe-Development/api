@@ -9,10 +9,12 @@ post '/login' do
 	login_status = checkLogin(username, password)
 	if login_status.to_i > 0
 		status 200
+        puts login_status
 		token = createSession(login_status)
 		output = {
 			:token => token
 		}
+        puts output
 		body output.to_json
 	else
 		status 403
