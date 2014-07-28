@@ -8,7 +8,7 @@
 
 **2. Tribes**
 * Create a new tribe
-
+===
 ## 1. Login
 
 #### POST /users/new
@@ -57,7 +57,7 @@ Destroys the current session
     token: string
 }
 ```
-
+===
 ## 2. Tribes
 
 #### POST /tribes/new
