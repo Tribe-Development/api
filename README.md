@@ -9,7 +9,7 @@
 **2. Tribes**
 * Create a new tribe
 ===
-## 1. Login
+### 1. Login
 
 #### POST /users/new
 Creates a new user
@@ -58,7 +58,7 @@ Destroys the current session
 }
 ```
 ===
-## 2. Tribes
+### 2. Tribes
 
 #### POST /tribes/new
 Create a new tribe and add creator to it
