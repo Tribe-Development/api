@@ -2,7 +2,7 @@
 
 # Login / Signup
 ### POST /users/new
-Parameters
+###### Parameters
 ```javascript
 {
     username:   string,
@@ -12,7 +12,7 @@ Parameters
 }
 ```
 
-Body
+###### Body
 ```javascript
 {
     token: integer
@@ -21,7 +21,7 @@ Body
 ===
 
 ### POST /login
-Parameters
+###### Parameters
 ```javascript
 {
     username:   string,
@@ -29,7 +29,7 @@ Parameters
 }
 ```
 
-Body
+###### Body
 ```javascript
 {
     token: integer
