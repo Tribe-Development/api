@@ -71,3 +71,11 @@ Create a new tribe and add creator to it
     token:   string
 }
 ```
+===
+
+#### POST /tribes/:tribe_id/add/users/:user_id
+Adds user to said tribe. FRIEND AUTHENTICATION NEEDS TO BE ADDED!
+
+###### Parameters
+* See URL
+===

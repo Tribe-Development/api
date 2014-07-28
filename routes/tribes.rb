@@ -1,5 +1,8 @@
 ## TRIBE
-# Creates a new tribe using POST params
+
+#########################################
+# Creates a new tribe using POST params #
+#########################################
 post '/tribes/new' do
 	if !params[:name]
 		status 400
@@ -24,6 +27,36 @@ post '/tribes/new' do
 	# Add creator to tribe
 	addUserToTribe(auth, tribe_id)
     
+	status 200
+	return
+end
+
+###############################
+# Add user to tribe using ids #
+###############################
+post '/tribes/:tribe/add/users/:user' do |tribe_id, user_id|
+    
+	# Authenticate
+	auth = isAuthorizedTribe(params[:token], tribe_id)
+	if  auth == -1
+		status 401
+		return
+	end
+	# Check that both user and tribe exist
+	if !Tribe.exists?(:id => tribe_id) or !User.exists?(:id => user_id)
+		status 404
+		return
+	end
+	# Check that relation doesn't already exist
+	if TribeToUser.where("tribe_id = ? AND user_id = ?", tribe_id, user_id).exists?
+		#return "Relation between tribe #{tribe_id} and user #{user_id} already exists"
+		status 403
+		error = {
+			:error_message => "User with id #{user_id} already exists"
+		}
+		return
+	end
+	addUserToTribe(user_id, tribe_id)
 	status 200
 	return
 end
@@ -107,32 +140,7 @@ post '/tribes/:tribe/remove/users/:user' do |tribe_id, user_id|
 	return
 end
 
-# Add user to tribe using ids
-post '/tribes/:tribe/add/users/:user' do |tribe_id, user_id|
-	# Authenticate
-	auth = isAuthorizedTribe(params[:token], tribe_id)
-	if  auth == -1
-		status 401
-		return
-	end
-	# Check that both user and tribe exist
-	if !Tribe.exists?(:id => tribe_id) or !User.exists?(:id => user_id)
-		status 404
-		return
-	end
-	# Check that relation doesn't already exist
-	if TribeToUser.where("tribe_id = ? AND user_id = ?", tribe_id, user_id).exists?
-		#return "Relation between tribe #{tribe_id} and user #{user_id} already exists"
-		status 403
-		error = {
-			:error_message => "User with id #{user_id} already exists"
-		}
-		return
-	end
-	addUserToTribe(user_id, tribe_id)
-	status 200
-	return
-end
+
 
 # Deletes a tribe - for dev will be removed later
 post '/tribes/:tribe/delete' do |tribe_id|
