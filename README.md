@@ -1,6 +1,12 @@
 # REST API Documentation
 
-# Login / Signup
+## Contents
+1. Login
+    * Create new users
+    * Login a users
+    * Logout a user
+
+## 1. Login
 
 ### POST /users/new
 Creates a new user
@@ -14,7 +20,7 @@ Creates a new user
 }
 ```
 
-##### Body
+###### Body
 ```javascript
 {
     token: integer
@@ -32,7 +38,7 @@ Creates a new sessions and returns the session token
 }
 ```
 
-##### Body
+###### Body
 ```javascript
 {
     token: integer
