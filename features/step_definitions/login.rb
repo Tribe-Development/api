@@ -1,6 +1,7 @@
 require 'net/http'
 require 'json'
 require_relative '../../models/models'
+require_relative '../../helpers/init'
 
 Given(/^table (\w+) is empty$/) do |table_name|
     ActiveRecord::Base.connection.execute("TRUNCATE #{table_name}")
@@ -91,6 +92,9 @@ Given(/^I am logged in as user (\w+) with password (\w+)$/) do |username, passwo
     end
     body = JSON.parse(res.body)
     @token = body["token"]
+    
+    # User id from token
+    @user_id = checkLogin(username, password)
 end
 
 When(/^I logout$/) do

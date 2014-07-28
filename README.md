@@ -60,18 +60,11 @@ Destroys the current session
 ## 2. Tribes
 
 ### POST /tribes/new
-Create a new tribe
+Create a new tribe and add creator to it
 ###### Parameters
 ```javascript
 {
     name:   string,
     token:   string
-}
-```
-
-###### Body
-```javascript
-{
-    token: integer
 }
 ```
